@@ -1,4 +1,5 @@
-import tkinter as tk;
+import tkinter as tk
+from tkinter import ttk
 import openpyxl 
 import os
 import datetime
@@ -6,6 +7,7 @@ from fuzzywuzzy import fuzz
 
     
 def schpQueryProcess(): 
+    
     #os.chdir(r"C:\Users\jones.2541\Desktop")
     #resultswb = openpyxl.Workbook()
     scholarshipPSTD = ''
@@ -13,11 +15,18 @@ def schpQueryProcess():
     enrollmentHours = ''
     ##resultswb.save('newfile.xlsx')
     ##print(datetime.date.today())
-    for i,e in enumerate(os.listdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries\FY22") ):
-        ##print(e[0:10])
-        ##print(datetime.datetime.strptime(e[0:10],"%Y_%m_%d").date(), datetime.date.today())
+    os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries")
+    fmax = max(os.listdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries")[:-1]) #finds most recent file; exludes 'query results' adds file names to list alphabetically 
+    #for i,e in enumerate(os.listdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries\FY22") ): ##need to account for folder change, find most recent date modified and name starting with 'FY'
+    for i,e in enumerate(os.listdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries" + "\\"+ str(fmax))):
+        #print(e[0:10])
+        #print(datetime.datetime.strptime(e[0:10],"%Y_%m_%d").date() ,datetime.date.today())
+        #print(os.getcwd())
+        #print(datetime.date.today(),datetime.datetime.strptime(e[0:10],"%Y_%m_%d").date())
+        
         if datetime.date.today() == datetime.datetime.strptime(e[0:10],"%Y_%m_%d").date():
-            os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries\FY22")
+            #os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries\FY22") ##need to account for folder change
+            os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries" + "\\"+ str(fmax))
             #print('true', e[0:10])
             #print(e[11:])
             if e[11:] == 'OSF_SCHOLARSHIP_ENROLMNT_HOURS.xlsx':
@@ -27,14 +36,12 @@ def schpQueryProcess():
                 scholarshipPSTD = openpyxl.load_workbook(e)
             elif e[11:] == 'OSF_UNAPPLIED_CREDITS_FILTER.xlsx':
                 unappliedwb = openpyxl.load_workbook(e)
-            
+         
     #os.chdir(r"C:\Users\jones.2541\Desktop")
     
-    scholarshipPSTD = openpyxl.load_workbook('2021_11_05_OSF_SCHOLARSHIP_PSTD_ENROLMNT.xlsx')
+
     sheet = scholarshipPSTD.active
     ScholarshipItemTypes = ['050000000014','050000000016','050000000019','050000000022']
-    unappliedwb = openpyxl.load_workbook('2021_11_05_OSF_UNAPPLIED_CREDITS_FILTER.xlsx')
-    enrollmentHours = openpyxl.load_workbook('2021_11_05_OSF_SCHOLARSHIP_ENROLMNT_HOURS.xlsx')
     enrollmentHourSheet = enrollmentHours.active
     unappliedSheet = unappliedwb.active
     
@@ -42,7 +49,9 @@ def schpQueryProcess():
 
     ####vlookup####
     os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Exceptions")
-    exceptions = openpyxl.load_workbook('1218 Exceptions.xlsx')
+    emax = max(os.listdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Exceptions"))
+    #exceptions = openpyxl.load_workbook('1218 Exceptions.xlsx') ##need to account for file change, find most recent date modified
+    exceptions = openpyxl.load_workbook(emax)
     execsheet = exceptions.active
     vlookup = set()
     for i in list(execsheet.columns)[0]:
@@ -134,7 +143,7 @@ def schpQueryProcess():
         elif enrollmentHourSheet.cell(row=i+1, column= 2).value in hItemTypes and ele.value > 0:
             enrollmentCount += 1
             for j, elej in enumerate(list(enrollmentHourSheet.rows)[i]):
-                p#rint(elej.value, end=" ")
+                #print(elej.value, end=" ")
                 resultsSheet3.cell(row= enrollmentCount+1, column=j+1).value = elej.value
             #print('\n')
 
@@ -147,27 +156,132 @@ def schpQueryProcess():
     current_date = datetime.date.today()
     resultswb.save('Query Results_' + str(current_date) + '.xlsx')  
 
+    ##########
+    ##ALT LOAN PROCESS###
+    ##########
+    os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Training")
+
+    wb = openpyxl.load_workbook('List of commonly received Alternative Loans.xlsx')
+    sheet = wb.active
 
 
+    a = list(sheet.columns)[0]
+    altloanNames = []
+    for i in range(1,len(a)):
+        altloanNames.append(a[i].value)
+
+    #os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries\FY22") ##need to account for folder change
+    os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Enrollment Queries" + "\\"+ str(fmax))
+    schpwb = scholarshipPSTD
+    #schpwb = openpyxl.load_workbook('_Altloan_Testfile_2020_11_04_OSF_SCHOLARSHIP_PSTD_ENROLMNT.xlsx')
+    schpsheet = schpwb.active
+
+    refcolumn = list(schpsheet.columns)[7]
+
+    os.chdir(r"K:\BF\OFS\Bursar\Processing\_External Payments\Scholarships\Queries\Alt Loan Query Results")
+    altLoanresults = openpyxl.Workbook()
+    resultsSheet = altLoanresults.active
+    resultsSheet.cell(row=1, column=1).value = 'ID'
+    resultsSheet.cell(row=1, column=2).value = 'Item Type'
+    resultsSheet.cell(row=1, column=3).value = 'Descr'
+    resultsSheet.cell(row=1, column=4).value = 'Item Amt'
+    resultsSheet.cell(row=1, column=5).value = 'Term'
+    resultsSheet.cell(row=1, column=6).value = 'Take Prgrs'
+    resultsSheet.cell(row=1, column=7).value = 'Career'
+    resultsSheet.cell(row=1, column=8).value = 'Ref Nbr'
+    resultsSheet.cell(row=1, column=9).value = 'Postd DtTm'
+    resultsSheet.cell(row=1, column=10).value = 'User'
+
+    count = 0
+    if datetime.datetime.today().weekday() == 0:
+        for i in altloanNames:
+            for j, ele in enumerate(refcolumn):
+                if schpsheet.cell(row=j+1, column=9).value == None or type(schpsheet.cell(row=j+1, column=9).value) == str: #moves on if column has nothing in it or a string
+                    continue
+                #elif schpsheet.cell(row=j, column=9).value.date() == datetime.date.today()-datetime.timedelta(1):
+                elif schpsheet.cell(row=j+1, column=9).value.date() == datetime.date.today()-datetime.timedelta(3) and fuzz.token_set_ratio(i, ele.value) > 90:
+                    #print(fuzz.token_set_ratio(i, ele.value),i ,ele.value)
+                    count += 1
+                    for index, element in enumerate(list(schpsheet.rows)[j]): #why not j+1 here?
+                        resultsSheet.cell(row=count+1, column=index+1).value = element.value
+                        #print(element.value, end=" ")
+                    #print('\n')
+    else:  
+        for i in altloanNames:
+            for j, ele in enumerate(refcolumn):
+                if schpsheet.cell(row=j+1, column=9).value == None or type(schpsheet.cell(row=j+1, column=9).value) == str: #moves on if column has nothing in it or a string
+                    continue
+                #elif schpsheet.cell(row=j, column=9).value.date() == datetime.date.today()-datetime.timedelta(1):
+                #else:
+                #   print(fuzz.token_set_ratio(i, ele.value),i,ele.value, schpsheet.cell(row=j+1, column=1).value) 
+                elif schpsheet.cell(row=j+1, column=9).value.date() == datetime.date.today()-datetime.timedelta(1) and fuzz.token_set_ratio(i, ele.value) > 90:
+                    #print(fuzz.token_set_ratio(i, ele.value),i, ele.value)
+                    count += 1
+                    for index, element in enumerate(list(schpsheet.rows)[j]): #why not j+1 here?
+                        resultsSheet.cell(row=count+1, column=index+1).value = element.value
+                        #print(element.value, end=" ")
+                    #print('\n')
+    altLoanresults.save('Alt Loan Results_'+ str(datetime.date.today()) + '.xlsx')
+    runCompletedWindow() #pop up to say completed
+    
+
+def runCompletedWindow():
+    window = tk.Toplevel()
+    window.title('Completed Window')
+    window.geometry("200x100")
+    label = ttk.Label(window,text = "Process Complete")
+    #window.configure(bg='green')
+    
+    topLevelButton = tk.Button(window,
+                          text = "CLOSE", 
+                          fg="white",
+                          bg="red",
+                          relief = 'solid',
+                          command=window.destroy)
+    #button.grid(row=1,column=0)
+    label.pack()
+    topLevelButton.pack()
+    
+    
 ####################
 root = tk.Tk()
-frame = tk.Frame(root)
-frame.pack()
+root.title("External Scholarship Hold Process")
+style = ttk.Style()
+style.configure('TFrame', background='grey')#area behind buttons
+
+frame = ttk.Frame(root)
+#frame.pack()
+frame.grid()
+#frame.place()
+root.geometry("400x300")
+root.columnconfigure(0, weight=1)   # Set weight to row and 
+root.rowconfigure(0, weight=1)      # column where the widget is
+root.configure(bg='grey') #area behind everything
+
+#img = tk.PhotoImage(file = r"C:\Users\jones.2541\Desktop\button.png") add an image
+
 #####################
 
-
 schpQPbutton = tk.Button(frame, 
-                text = "Scholarship Query Process", 
-                command = schpQueryProcess)
-schpQPbutton.pack(side=tk.LEFT)
+                text = "Click to run Scholarship Query Process and Alt Loan Process", 
+                command = schpQueryProcess,
+                height = 8,
+                relief = 'solid'
+                
+                )
+schpQPbutton.grid(row=0,column=0)
+#schpQPbutton.pack(side=tk.TOP, pady=20, padx=8)
+#schpQPbutton.place(x=200, y=150)
 
 button = tk.Button(frame, 
                    text="QUIT", 
-                   fg="red",
-                   command=quit)
-button.pack(side=tk.LEFT)
-
-
+                   fg="white",
+                   bg="red",
+                   relief = 'solid',
+                   command=root.destroy)
+                   
+#button.pack(side=tk.BOTTOM, pady=8, padx=8)
+button.grid(row=1,column=0, pady= 20)
 
 
 
